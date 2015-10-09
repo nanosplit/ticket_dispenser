@@ -7,9 +7,9 @@ int count = 0;
 void setup() {
 
     Serial.begin(9600);
-
-	pinMode(tsignal, INPUT_PULLUP);
-	pinMode(tmotor, OUTPUT);
+    
+    pinMode(tsignal, INPUT_PULLUP);
+    pinMode(tmotor, OUTPUT);
     tstate = digitalRead(tsignal);
     
 }
