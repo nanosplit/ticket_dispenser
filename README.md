@@ -15,6 +15,7 @@ Powering the Deltronic DL-1275 ticket dispenser : [http://www.deltroniclabs.com]
 ### Keypad
 Using Membrane 3x4 Matrix Keypad : [https://www.adafruit.com/](https://www.adafruit.com/products/419)
 - http://playground.arduino.cc/Code/Keypad
+- https://www.adafruit.com/products/419 (keypad_test source)
 
 ### 7 Segment Display
 Using Adafruit 0.56" 4 digit 7 segment display w/I2C Backpack : [https://www.adafruit.com/](https://www.adafruit.com/products/881)
