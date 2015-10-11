@@ -73,9 +73,9 @@ void loop() {
         for (uint16_t sig_count = tickets_dispensed; tickets_dispensed <= dispense; sig_count) {
           if (digitalRead(tsignal) == LOW)  // check if signal received from opto-sensor
           {
+            delay(120);
             matrix.println(tickets_dispensed);
             tickets_dispensed++;
-            delay(70);
           }
           matrix.writeDisplay();
         }
