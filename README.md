@@ -24,6 +24,7 @@ Using Membrane 3x4 Matrix Keypad : [https://www.adafruit.com/](https://www.adafr
 #### Keypad Wiring:
 - pins 2-8
 - Check http://www.adafruit.com/images/large/membranekeypad34arduino_LRG.jpg
+
 ___
 ### 7 Segment Display
 Using Adafruit 0.56" 4 digit 7 segment display w/I2C Backpack : [https://www.adafruit.com/](https://www.adafruit.com/products/881)
