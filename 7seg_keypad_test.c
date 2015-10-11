@@ -29,6 +29,7 @@ int n4 = 0;
 int dn2 = 0;
 int dn3 = 0;
 int dn4 = 0;
+int dispense = 0;
 
 void setup() {
 #ifndef __AVR_ATtiny85__
@@ -46,7 +47,7 @@ void setup() {
 	matrix.writeDisplay();
 }
 
-void(* resetFunc) (void) = 0;
+void(* resetFunc) (void) = 0; // reset function to restart the app & clear the key var
 void loop() {
 
 	char key = keypad.getKey();
@@ -56,7 +57,8 @@ void loop() {
 			case '#' :
 				Serial.println();
 				Serial.println("Dispensing tickets");
-				for (uint16_t counter = 1; counter <= dn2; counter++)  {
+				// need to add counter from opto-sensor
+				for (uint16_t counter = 1; counter <= dispense; counter++)  {
 					matrix.println(counter);
 					Serial.println(counter);
 					matrix.writeDisplay();
@@ -64,7 +66,7 @@ void loop() {
 				}
 				Serial.println("Done dispensing... resetting...");
 				delay(500);
-				resetFunc();
+				resetFunc(); // reset function to restart the app & clear the key var
 
 			case '*' :
 				// need interrupt to cancel ticket dispensing
@@ -73,27 +75,31 @@ void loop() {
 		}
 
 		switch (count) {
+			// first number to be entered
 			case 0 :
-				matrix.clear();
-				matrix.writeDisplay();
-				count++;
-				n1 = key;
-				matrix.print(n1);
-				matrix.writeDisplay();
+				matrix.clear(); // clear display
+				matrix.writeDisplay(); // write clear
+				count++; // ++ the counter
+				n1 = key; // set n1 to the key pressed
+				dispense = n1; // set dispensed var to n1 (key)
+				matrix.print(n1); // set display to show n1
+				matrix.writeDisplay(); // write show n1
 			break;
-
+			// second number to be entered
 			case 1 :
 				count++;
+				// funky fix for keypad not registering the zero key -
 				if (key == '^') {
 					n2 = 0;
 				} else {
 					n2 = key;
 				}
-				dn2 = n1*10+n2;
+				dn2 = n1*10+n2; // fix so if n1 was a 5, and n2 is a 3, then dn2 = 53
+				dispense = dn2; // set dispense var to dn2
 				matrix.print(dn2);
 				matrix.writeDisplay();
 			break;
-
+			// third number to be entered
 			case 2:
 				count++;
 				if (key == '^') {
@@ -102,10 +108,11 @@ void loop() {
 					n3 = key;
 				}
 				dn3 = dn2*10+n3;
+				dispense = dn3;
 				matrix.print(dn3);
 				matrix.writeDisplay();
 			break;
-
+			// fourth number to be entered
 			case 3:
 				count++;
 				if (key == '^') {
@@ -114,22 +121,10 @@ void loop() {
 					n4 = key;
 				}
 				dn4 = dn3*10+n4;
+				dispense = dn4;
 				matrix.print(dn4);
 				matrix.writeDisplay();
 			break;
-		}
-
-		switch (count) {
-			case 0 :
-				matrix.print(n1);
-				matrix.writeDisplay();
-			break;
-		}
-
-		if (count > 4) {
-			matrix.clear();
-			matrix.writeDisplay();
-			resetFunc();
 		}
 
 	}
