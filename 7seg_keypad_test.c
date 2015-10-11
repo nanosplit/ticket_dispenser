@@ -10,10 +10,10 @@ Adafruit_7segment matrix = Adafruit_7segment();
 const byte ROWS = 4; //four rows
 const byte COLS = 3; //three columns
 char keys[ROWS][COLS] = {
-  {1,2,3},
-  {4,5,6},
-  {7,8,9},
-  {'*',0,'#'}
+	{1,2,3},
+	{4,5,6},
+	{7,8,9},
+	{'*','^','#'}
 };
 byte rowPins[ROWS] = {8, 7, 6, 5}; //connect to the row pinouts of the keypad
 byte colPins[COLS] = {4, 3, 2}; //connect to the column pinouts of the keypad
@@ -22,98 +22,116 @@ Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
 // end keypad
 
 int count = 0;
-int first_key = 0;
-int second_key = 0;
-int third_key = 0;
-int fourth_key = 0;
+int n1 = 0;
+int n2 = 0;
+int n3 = 0;
+int n4 = 0;
+int dn2 = 0;
+int dn3 = 0;
+int dn4 = 0;
 
 void setup() {
 #ifndef __AVR_ATtiny85__
-  Serial.begin(9600);
-  Serial.println("7 Segment + Keypad Test");
+	Serial.begin(9600);
+	Serial.println("7 Segment + Keypad Test");
 #endif
-  matrix.begin(0x70);
-  matrix.setBrightness(1);
-  matrix.print(1000, DEC);
-  matrix.writeDisplay();
-  matrix.print(0);
-  matrix.writeDisplay();
-  Serial.println("Ready for input");
+	matrix.begin(0x70);
+	matrix.setBrightness(1);
+	matrix.print(10000, DEC);
+	matrix.writeDisplay();
+	delay(500);
+	matrix.clear();
+	matrix.writeDisplay();
+	matrix.printNumber(0);
+	matrix.writeDisplay();
 }
 
+void(* resetFunc) (void) = 0;
 void loop() {
 
-  char key = keypad.getKey();
-  if (key != NO_KEY) {
+	char key = keypad.getKey();
+	if (key != NO_KEY) {
 
-    count++;
+		switch (key) {
+			case '#' :
+				Serial.println();
+				Serial.println("Dispensing tickets");
+				for (uint16_t counter = 1; counter <= dn2; counter++)  {
+					matrix.println(counter);
+					Serial.println(counter);
+					matrix.writeDisplay();
+					delay(10);
+				}
+				Serial.println("Done dispensing... resetting...");
+				delay(500);
+				resetFunc();
 
-    if (key == '#') {
-      Serial.println();
-      Serial.println("Dispensing tickets");
-      delay(3000);
-      Serial.println("Done dispensing... resetting...");
-      count = 0;
-      matrix.print(10000, DEC);
-      matrix.writeDisplay();
-      delay(500);
-      matrix.print(0);
-      matrix.writeDisplay();
-      Serial.println("Ready for input");
-    }
+			case '*' :
+				// need interrupt to cancel ticket dispensing
+				delay(500);
+				resetFunc();
+		}
 
-    if (key =='*') {
-      // need interrupt to kill ticket dispensing
-      Serial.println();
-      Serial.println("Resetting...");
-      matrix.print(10000, DEC);
-      matrix.writeDisplay();
-      delay(3000);
-      count = 0;
-      matrix.print(0);
-      matrix.writeDisplay();
-      Serial.println("Done resetting...");
-      Serial.println("Ready for input");
-    }
+		switch (count) {
+			case 0 :
+				matrix.clear();
+				matrix.writeDisplay();
+				count++;
+				n1 = key;
+				matrix.print(n1);
+				matrix.writeDisplay();
+			break;
 
-    if (count == 1) {
-      matrix.writeDigitRaw(4, 0x00);
-      matrix.writeDigitNum(0, key);
+			case 1 :
+				count++;
+				if (key == '^') {
+					n2 = 0;
+				} else {
+					n2 = key;
+				}
+				dn2 = n1*10+n2;
+				matrix.print(dn2);
+				matrix.writeDisplay();
+			break;
 
-      matrix.writeDisplay();
-      first_key = key;
-      Serial.print(first_key);
-    }
-    else if (count == 2) {
-      matrix.writeDigitNum(1,key);
-      matrix.writeDisplay();
-      second_key = key;
-      Serial.print(second_key);
-    }
-    else if (count == 3) {
-      matrix.writeDigitNum(3,key);
-      matrix.writeDisplay();
-      third_key = key;
-      Serial.print(third_key);
-    }
-    else if (count == 4) {
-      matrix.writeDigitNum(4,key);
-      matrix.writeDisplay();
-      fourth_key = key;
-      Serial.print(fourth_key);
-    }
+			case 2:
+				count++;
+				if (key == '^') {
+					n3 = 0;
+				} else {
+					n3 = key;
+				}
+				dn3 = dn2*10+n3;
+				matrix.print(dn3);
+				matrix.writeDisplay();
+			break;
 
-    else if (count >= 5) {
-      Serial.println();
-      matrix.print(10000, DEC);
-      matrix.writeDisplay();
-      delay(500);
-      matrix.print(0);
-      matrix.writeDisplay();
-      count = 0;
-      Serial.println("Maximum reached... resetting...");
-      delay(1000);
-    }
-  }
+			case 3:
+				count++;
+				if (key == '^') {
+					n4 = 0;
+				} else {
+					n4 = key;
+				}
+				dn4 = dn3*10+n4;
+				matrix.print(dn4);
+				matrix.writeDisplay();
+			break;
+		}
+
+		switch (count) {
+			case 0 :
+				matrix.print(n1);
+				matrix.writeDisplay();
+			break;
+		}
+
+		if (count > 4) {
+			matrix.clear();
+			matrix.writeDisplay();
+			resetFunc();
+		}
+
+	}
 
 }
