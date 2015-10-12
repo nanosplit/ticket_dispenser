@@ -94,7 +94,7 @@ void loop() {
 //
 // ticket dispensing function
 //
-					setTime(0);													// set time(); to zero for accurate cut-off timing (no ticket detector)
+					setTime(0);												// set time(); to zero for accurate cut-off timing (no ticket detector)
 					previous_status = digitalRead(opto_signal_pin);			// set prev state to what *should* default to 1 - needed for proper state machine function
 					digitalWrite(dispenser_motor, HIGH); 						// turn motor on
 					for (;tickets_dispensed < tickets_requested;) {			// start the loop to start dispensing and the state machine
