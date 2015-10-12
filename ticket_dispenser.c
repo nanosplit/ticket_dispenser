@@ -1,3 +1,4 @@
+#include "Time.h" // https://github.com/PaulStoffregen/Time
 #include "Wire.h"
 #include "Keypad.h"
 #include "Adafruit_LEDBackpack.h"
@@ -34,6 +35,8 @@ int dn4 = 0;											// 2 digit value (dn3*10+n4) - fix for 7 segment display
 //
 int tickets_requested = 0;							// number of tickets requested to dispense
 int tickets_dispensed = 0;							// number of tickets that have been dispensed
+int last_opto_signal = 0;
+int current_time = 0;
 //
 // setup pins
 //
@@ -91,6 +94,7 @@ void loop() {
 //
 // ticket dispensing function
 //
+					setTime();													// set time(); to zero for accurate cut-off timing (no ticket detector)
 					previous_status = digitalRead(opto_signal_pin);			// set prev state to what *should* default to 1 - needed for proper state machine function
 					digitalWrite(dispenser_motor, HIGH); 						// turn motor on
 					for (;tickets_dispensed < tickets_requested;) {			// start the loop to start dispensing and the state machine
@@ -115,11 +119,32 @@ void loop() {
 
 						if (current_status == 0 	&& previous_status == 1) {
 							tickets_dispensed++;
+							last_opto_signal = now();		// read the current time
 							previous_status = 0;
 						}
 
 						matrix.print(tickets_dispensed);	// update the display with the current number of tickets dispensed
 						matrix.writeDisplay();				// write the # dispensed
+//
+// end of roll catch
+//
+						current_time = now();									// get the current time
+						int no_ticket_reset = current_time - last_opto_signal; // calculate difference
+						if (no_ticket_reset >= 3) {								// reset if no ticket has ben detected in over 3 seconds
+							digitalWrite(dispenser_motor, LOW);
+							delay(1000);
+							resetFunc();
+						}
+//
+// cancel dispensing
+//
+						key = keypad.getKey();								// read key value
+						if (key == '*') {											// reset if * pressed on keypad
+							digitalWrite(dispenser_motor, LOW);
+							delay(1000);
+							resetFunc();
+						}
+
 					}
 
 					delay(25);								// critical delay - fine tune exact stop to ensure tear bar aligns with perforations
