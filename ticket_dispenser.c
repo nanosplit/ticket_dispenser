@@ -52,10 +52,6 @@ int previous_status = 0;              // last state machine status
 // initialize setup
 //
 void setup() {
-#ifndef __AVR_ATtiny85__
-	Serial.begin(9600);
-	Serial.println("Ticket Dispenser");
-#endif
 	pinMode(opto_signal_pin, INPUT_PULLUP);
 	pinMode(dispenser_motor, OUTPUT);
 	matrix.begin(0x70);             // set the address of the 7 segment display
