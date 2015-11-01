@@ -97,7 +97,7 @@ void loop() {
 					setTime(0);
 					previous_status = digitalRead(opto_signal_pin);
 					digitalWrite(dispenser_motor, HIGH);
-					while (tickets_dispensed < tickets_requested) {
+					for (;tickets_dispensed < tickets_requested;) {
 
 						// 1 = HIGH = no ticket gap detected
 						// 0 = LOW = ticket gap detected
@@ -148,7 +148,7 @@ void loop() {
 					}
 
 					// fine tune exact stop to ensure tear bar aligns with perforations
-					delay(40);
+					delay(55);
 					digitalWrite(dispenser_motor, LOW);
 					delay(1000);
 					resetFunc();              // restet
