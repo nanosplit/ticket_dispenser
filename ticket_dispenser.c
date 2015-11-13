@@ -57,6 +57,7 @@ void setup() {
 	Serial.begin(9600);
 	pinMode(opto_signal_pin, INPUT_PULLUP);
 	pinMode(dispenser_motor, OUTPUT);
+	pinMode(13, OUTPUT);
 	matrix.begin(0x70);             // set the address of the 7 segment display
 	matrix.setBrightness(1);      // set the brightness (1-15) - 1 = low - 15 = incinerated cornea's
 	matrix.print(10000, DEC);
@@ -99,6 +100,7 @@ void loop() {
 					previous_status = digitalRead(opto_signal_pin);
 					digitalWrite(dispenser_motor, HIGH);
 					for (;tickets_dispensed < tickets_requested;) {
+						digitalWrite(13, LOW);
 
 						// 1 = HIGH = no ticket gap detected
 						// 0 = LOW = ticket gap detected
@@ -115,11 +117,13 @@ void loop() {
 						}
 
 						if (current_status == 0 && previous_status == 1) {
-							delay(100);
-							if (opto_signal_status == 0) {
+							delay(90);
+							if (digitalRead(opto_signal_pin) == 0) {
 								tickets_dispensed++;
+								digitalWrite(13, HIGH);
 								last_opto_signal = now();
 								previous_status = 0;
+
 							}
 						}
 
@@ -153,6 +157,7 @@ void loop() {
 					end_ticket = millis();
 					int long diff = end_ticket - start_ticket;
 					Serial.println(diff);
+					digitalWrite(13, LOW);
 					delay(1000);
 					resetFunc();              // restet
 				}
