@@ -37,6 +37,8 @@ int tickets_requested = 0;
 int tickets_dispensed = 0;
 int last_opto_signal = 0;
 int current_time = 0;
+int long start_ticket = 0;
+int long end_ticket = 0;
 //
 // setup pins
 //
@@ -52,6 +54,7 @@ int previous_status = 0;              // last state machine status
 // initialize setup
 //
 void setup() {
+	Serial.begin(9600);
 	pinMode(opto_signal_pin, INPUT_PULLUP);
 	pinMode(dispenser_motor, OUTPUT);
 	matrix.begin(0x70);             // set the address of the 7 segment display
@@ -63,6 +66,7 @@ void setup() {
 	matrix.writeDisplay();
 	matrix.printNumber(0);
 	matrix.writeDisplay();
+	Serial.println("ready...");
 }
 //
 // start the main program
@@ -91,6 +95,7 @@ void loop() {
 // ticket dispensing function
 //
 					setTime(0);
+					start_ticket = millis();
 					previous_status = digitalRead(opto_signal_pin);
 					digitalWrite(dispenser_motor, HIGH);
 					for (;tickets_dispensed < tickets_requested;) {
@@ -110,6 +115,7 @@ void loop() {
 						}
 
 						if (current_status == 0 && previous_status == 1) {
+							delay(100);
 							if (opto_signal_status == 0) {
 								tickets_dispensed++;
 								last_opto_signal = now();
@@ -143,9 +149,10 @@ void loop() {
 
 					}
 
-					// fine tune exact stop to ensure tear bar aligns with perforations
-					delay(55);
 					digitalWrite(dispenser_motor, LOW);
+					end_ticket = millis();
+					int long diff = end_ticket - start_ticket;
+					Serial.println(diff);
 					delay(1000);
 					resetFunc();              // restet
 				}
