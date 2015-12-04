@@ -37,8 +37,6 @@ int tickets_requested = 0;
 int tickets_dispensed = 0;
 int last_opto_signal = 0;
 int current_time = 0;
-int long start_ticket = 0;
-int long end_ticket = 0;
 //
 // setup pins
 //
@@ -57,7 +55,6 @@ void setup() {
 	Serial.begin(9600);
 	pinMode(opto_signal_pin, INPUT_PULLUP);
 	pinMode(dispenser_motor, OUTPUT);
-	pinMode(13, OUTPUT);
 	matrix.begin(0x70);             // set the address of the 7 segment display
 	matrix.setBrightness(1);      // set the brightness (1-15) - 1 = low - 15 = incinerated cornea's
 	matrix.print(10000, DEC);
@@ -86,17 +83,16 @@ void loop() {
 		switch (key) {
 			case '#' :
 				if (tickets_requested > 0) {
-					matrix.clear();
-					matrix.writeDisplay();
-					delay(50);
-					matrix.println(0);
-					matrix.writeDisplay();
-					delay(50);
+					// matrix.clear();
+					// matrix.writeDisplay();
+					// delay(50);
+					// matrix.println(0);
+					// matrix.writeDisplay();
+					// delay(50);
 //
 // ticket dispensing function
 //
 					setTime(0);
-					start_ticket = millis();
 					previous_status = digitalRead(opto_signal_pin);
 					digitalWrite(dispenser_motor, HIGH);
 					for (;tickets_dispensed < tickets_requested;) {
@@ -117,13 +113,13 @@ void loop() {
 						}
 
 						if (current_status == 0 && previous_status == 1) {
-							delay(90);
-							if (digitalRead(opto_signal_pin) == 0) {
-								tickets_dispensed++;
-								digitalWrite(13, HIGH);
-								last_opto_signal = now();
-								previous_status = 0;
-
+							tickets_dispensed++;
+							last_opto_signal = now();
+							previous_status = 0;
+							if (tickets_dispensed == tickets_requested) {
+								delay(10);
+								digitalWrite(dispenser_motor, LOW);
+								break;
 							}
 						}
 
@@ -154,17 +150,14 @@ void loop() {
 					}
 
 					digitalWrite(dispenser_motor, LOW);
-					end_ticket = millis();
-					int long diff = end_ticket - start_ticket;
-					Serial.println(diff);
-					digitalWrite(13, LOW);
 					delay(1000);
 					resetFunc();              // restet
 				}
 
 				// if nothing was selected, but # pressed, reset
-				delay(500);
-				resetFunc();            // reset
+
+				// delay(500);
+				// resetFunc();            // reset
 
 			// if * is pressed, reset
 			case '*' :
