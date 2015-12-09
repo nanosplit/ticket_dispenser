@@ -3,8 +3,7 @@
 #include "Keypad.h"
 #include "Adafruit_LEDBackpack.h"
 #include "Adafruit_GFX.h"
-
-Adafruit_7segment matrix = Adafruit_7segment();
+#include "ticket_dispenser.h"
 //
 // keypad
 //
@@ -55,10 +54,7 @@ void setup() {
   Serial.begin(9600);
   pinMode(opto_signal_pin, INPUT_PULLUP);
   pinMode(dispenser_motor, OUTPUT);
-  matrix.begin(0x70);           // set the address of the 7 segment display
-  matrix.setBrightness(1);      // set the brightness (1-15) - 1 = low :: 15 = incinerated corneas
-  matrix.print(10000, DEC);
-  matrix.writeDisplay();
+  matrixInitialize();
   delay(200);
   matrixReset();
   Serial.println("ready...");
@@ -66,7 +62,6 @@ void setup() {
 //
 // main
 //
-void(* resetFunc) (void) = 0;           // reset
 void loop() {
 
   char key = keypad.getKey();           // get the value of the key pressed
@@ -86,14 +81,12 @@ void loop() {
 //
           setTime(0);
           previous_status = digitalRead(opto_signal_pin);
-          motorOn();
+          motorOn(dispenser_motor);
           while (tickets_dispensed < tickets_requested) {
 
             if (tickets_requested == 1) {
               delay(490);   // varies based on length of each ticket - longer ticket = higher delay
-              motorOff();
-              delay(1000);
-              resetFunc();
+              cancelDispensing(dispenser_motor);
             }
 
             // 1 = HIGH = no ticket gap detected
@@ -116,17 +109,17 @@ void loop() {
               if (tickets_dispensed == (tickets_requested - 1)) {
                 delay(100);   // varies based on length of each ticket - longer ticket = higher delay
                 printMatrix(tickets_requested);
-                cancelDispensing();
+                cancelDispensing(dispenser_motor);
               }
 
               if (digitalRead(opto_signal_pin) == 1) {
-                countTicket();
+                countTicket(tickets_dispensed, last_opto_signal, previous_status);
               }
 
               // reset if *
               key = keypad.getKey();
               if (key == '*') {
-                cancelDispensing();
+                cancelDispensing(dispenser_motor);
               }
             }
 //
@@ -135,18 +128,18 @@ void loop() {
             current_time = now();
             int no_ticket_reset = current_time - last_opto_signal;
             if (no_ticket_reset >= 3) {
-              cancelDispensing();
+              cancelDispensing(dispenser_motor);
             }
 
             key = keypad.getKey();
             if (key == '*') {
-              cancelDispensing();
+              cancelDispensing(dispenser_motor);
             }
           }
         }
       // if * is pressed, reset
       case '*' :
-      cancelDispensing();
+      cancelDispensing(dispenser_motor);
     }
 //
 // count how many numbers have been entered
@@ -203,42 +196,4 @@ void loop() {
       resetFunc();
     }
   }
-}
-
-void printMatrix(int keyed_num) {
-  matrix.print(keyed_num);
-  matrix.writeDisplay();
-}
-
-void motorOn() {
-  digitalWrite(dispenser_motor, HIGH);
-}
-
-void motorOff() {
-  digitalWrite(dispenser_motor, LOW);
-}
-
-void clearMatrix() {
-  matrix.clear();
-  matrix.writeDisplay();
-}
-
-void matrixReset() {
-  matrix.clear();
-  matrix.writeDisplay();
-  matrix.printNumber(0);
-  matrix.writeDisplay();
-}
-
-void cancelDispensing() {
-  digitalWrite(dispenser_motor, LOW);
-  delay(1000);
-  resetFunc();
-}
-
-void countTicket() {
-  tickets_dispensed++;
-  last_opto_signal = now();
-  previous_status = 0;
-  printMatrix(tickets_dispensed);
 }
