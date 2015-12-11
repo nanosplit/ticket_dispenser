@@ -4,6 +4,7 @@
 #include "Adafruit_LEDBackpack.h"
 #include "Adafruit_GFX.h"
 #include "ticket_dispenser.h"
+#include "dispense_ticket.h"
 //
 // keypad
 //
@@ -76,71 +77,15 @@ void loop() {
       case '#' :
         if (tickets_requested > 0) {
           matrixReset();
-//
-// ticket dispensing function
-//
-          setTime(0);
-          previous_status = digitalRead(opto_signal_pin);
-          motorOn(dispenser_motor);
-          while (tickets_dispensed < tickets_requested) {
+          dispense_ticket(opto_signal_pin, dispenser_motor, tickets_dispensed,
+            tickets_requested, opto_signal_status, current_status, previous_status,
+            last_opto_signal, key);
 
-            if (tickets_requested == 1) {
-              delay(490);   // varies based on length of each ticket - longer ticket = higher delay
-              cancelDispensing(dispenser_motor);
-            }
-
-            // 1 = HIGH = no ticket gap detected
-            // 0 = LOW = ticket gap detected
-            opto_signal_status = digitalRead(opto_signal_pin);
-
-            // state machine conditions
-            if (opto_signal_status == 1) {
-              current_status = 1;
-              previous_status = 1;
-            }
-
-            if (opto_signal_status == 0) {
-              current_status = 0;
-            }
-
-            // count tickets dispensed
-            for (;current_status == 0 && previous_status == 1;) {
-
-              if (tickets_dispensed == (tickets_requested - 1)) {
-                delay(100);   // varies based on length of each ticket - longer ticket = higher delay
-                printMatrix(tickets_requested);
-                cancelDispensing(dispenser_motor);
-              }
-
-              if (digitalRead(opto_signal_pin) == 1) {
-                countTicket(tickets_dispensed, last_opto_signal, previous_status);
-              }
-
-              // reset if *
-              key = keypad.getKey();
-              if (key == '*') {
-                cancelDispensing(dispenser_motor);
-              }
-            }
-//
-// end of roll catch
-//
-            current_time = now();
-            int no_ticket_reset = current_time - last_opto_signal;
-            if (no_ticket_reset >= 3) {
-              cancelDispensing(dispenser_motor);
-            }
-
-            key = keypad.getKey();
-            if (key == '*') {
-              cancelDispensing(dispenser_motor);
-            }
-          }
-        }
-      // if * is pressed, reset
+      // * reset
       case '*' :
       cancelDispensing(dispenser_motor);
     }
+  }
 //
 // count how many numbers have been entered
 //
@@ -149,7 +94,11 @@ void loop() {
       case 0 :
         clearMatrix();
         count++;
-        n1 = key;
+        if (key == '^') {
+          n1 = 0;
+        } else {
+          n1 = key;
+        }
         tickets_requested = n1;
         printMatrix(n1);
       break;
